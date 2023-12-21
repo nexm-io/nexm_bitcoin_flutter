@@ -72,7 +72,7 @@ main() {
       test('defaults to empty script, and 0xffffffff SEQUENCE number', () {
         final tx = new Transaction();
         tx.addInput(prevTxHash, 0);
-        expect(tx.ins[0].script.length, 0);
+        expect(tx.ins[0].script!.length, 0);
         expect(tx.ins[0].sequence, 0xffffffff);
       });
       (fixtures['invalid']['addInput'] as List<dynamic>).forEach((f) {
@@ -80,7 +80,8 @@ main() {
           final tx = new Transaction();
           final hash = HEX.decode(f['hash']);
           try {
-            expect(tx.addInput(hash, f['index']), isArgumentError);
+            expect(tx.addInput(hash as Uint8List, f['index']),
+                isArgumentError);
           } catch (err) {
             expect((err as ArgumentError).message, f['exception']);
           }
@@ -160,7 +161,8 @@ Transaction fromRaw(raw, [isWitness]) {
     } else if (txIn['script'] != null && txIn['script'] != '') {
       scriptSig = bscript.fromASM(txIn['script']);
     }
-    tx.addInput(txHash, txIn['index'], txIn['sequence'], scriptSig);
+    tx.addInput(txHash as Uint8List, txIn['index'], txIn['sequence'],
+        scriptSig);
 
     if (isWitness) {
       var witness = (txIn['witness'] as List<dynamic>)

@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'package:meta/meta.dart';
 import 'package:bip32/src/utils/ecurve.dart' show isPoint;
 import 'package:bs58check/bs58check.dart' as bs58check;
 
@@ -10,52 +9,52 @@ import '../utils/script.dart' as bscript;
 import '../utils/constants/op.dart';
 
 class P2PKH {
-  PaymentData data;
-  NetworkType network;
-  P2PKH({@required data, network}) {
+ late PaymentData data;
+ late NetworkType network;
+  P2PKH({required PaymentData data,NetworkType? network}) {
     this.network = network ?? bitcoin;
     this.data = data;
     _init();
   }
   _init() {
     if (data.address != null) {
-      _getDataFromAddress(data.address);
+      _getDataFromAddress(data.address!);
       _getDataFromHash();
     } else if (data.hash != null) {
       _getDataFromHash();
     } else if (data.output != null) {
-      if (!isValidOutput(data.output))
-        throw new ArgumentError('Output is invalid');
-      data.hash = data.output.sublist(3, 23);
+      if (!isValidOutput(data.output!))
+        throw  ArgumentError('Output is invalid');
+      data.hash = data.output!.sublist(3, 23);
       _getDataFromHash();
     } else if (data.pubkey != null) {
-      data.hash = hash160(data.pubkey);
+      data.hash = hash160(data.pubkey!);
       _getDataFromHash();
       _getDataFromChunk();
     } else if (data.input != null) {
-      List<dynamic> _chunks = bscript.decompile(data.input);
+      List<dynamic> _chunks = bscript.decompile(data.input!)!;
       _getDataFromChunk(_chunks);
-      if (_chunks.length != 2) throw new ArgumentError('Input is invalid');
+      if (_chunks.length != 2) throw  ArgumentError('Input is invalid');
       if (!bscript.isCanonicalScriptSignature(_chunks[0]))
-        throw new ArgumentError('Input has invalid signature');
+        throw  ArgumentError('Input has invalid signature');
       if (!isPoint(_chunks[1]))
-        throw new ArgumentError('Input has invalid pubkey');
+        throw  ArgumentError('Input has invalid pubkey');
     } else {
-      throw new ArgumentError('Not enough data');
+      throw  ArgumentError('Not enough data');
     }
   }
 
-  void _getDataFromChunk([List<dynamic> _chunks]) {
+  void _getDataFromChunk([List<dynamic>? _chunks]) {
     if (data.pubkey == null && _chunks != null) {
       data.pubkey = (_chunks[1] is int)
-          ? new Uint8List.fromList([_chunks[1]])
+          ?  Uint8List.fromList([_chunks[1]])
           : _chunks[1];
-      data.hash = hash160(data.pubkey);
+      data.hash = hash160(data.pubkey!);
       _getDataFromHash();
     }
     if (data.signature == null && _chunks != null)
       data.signature = (_chunks[0] is int)
-          ? new Uint8List.fromList([_chunks[0]])
+          ?  Uint8List.fromList([_chunks[0]])
           : _chunks[0];
     if (data.input == null && data.pubkey != null && data.signature != null) {
       data.input = bscript.compile([data.signature, data.pubkey]);
@@ -64,9 +63,9 @@ class P2PKH {
 
   void _getDataFromHash() {
     if (data.address == null) {
-      final payload = new Uint8List(21);
+      final payload =  Uint8List(21);
       payload.buffer.asByteData().setUint8(0, network.pubKeyHash);
-      payload.setRange(1, payload.length, data.hash);
+      payload.setRange(1, payload.length, data.hash!);
       data.address = bs58check.encode(payload);
     }
     if (data.output == null) {
@@ -84,9 +83,9 @@ class P2PKH {
     Uint8List payload = bs58check.decode(address);
     final version = payload.buffer.asByteData().getUint8(0);
     if (version != network.pubKeyHash)
-      throw new ArgumentError('Invalid version or Network mismatch');
+      throw  ArgumentError('Invalid version or Network mismatch');
     data.hash = payload.sublist(1);
-    if (data.hash.length != 20) throw new ArgumentError('Invalid address');
+    if (data.hash?.length != 20) throw  ArgumentError('Invalid address');
   }
 }
 

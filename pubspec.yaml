@@ -4,7 +4,7 @@ version: 2.0.2
 homepage: https://github.com/anicdh
 
 environment:
-  sdk: ">=2.3.0 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   bip39: ^1.0.6
@@ -12,13 +12,8 @@ dependencies:
   pointycastle: ^3.6.0
   hex: ^0.2.0
   bs58check: ^1.0.2
-  bech32: 0.2.1
-
-dev_dependencies:
-  test: ^1.21.1
-
-dependency_overrides:
-  analyzer: 4.1.0
+  bech32: 0.2.2
   convert: ^3.0.0
   crypto: ^3.0.0
-  hex: ^0.2.0
+dev_dependencies:
+  test: ^1.21.1

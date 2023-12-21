@@ -1,13 +1,16 @@
-import 'package:test/test.dart';
-import 'package:hex/hex.dart';
-import 'dart:typed_data';
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:hex/hex.dart';
+import 'package:test/test.dart';
+
 import '../lib/src/ecpair.dart' show ECPair;
 import '../lib/src/models/networks.dart' as NETWORKS;
 
-final ONE = HEX
-    .decode('0000000000000000000000000000000000000000000000000000000000000001');
+Uint8List ONE = HEX
+    .decode
+  ('0000000000000000000000000000000000000000000000000000000000000001') as Uint8List;
 
 main() {
   final fixtures = json.decode(
@@ -29,14 +32,14 @@ main() {
       });
       (fixtures['valid'] as List).forEach((f) {
         test('derives public key for ${f['WIF']}', () {
-          final d = HEX.decode(f['d']);
+          Uint8List d = HEX.decode(f['d']) as Uint8List;
           final keyPair = ECPair.fromPrivateKey(d, compressed: f['compressed']);
           expect(HEX.encode(keyPair.publicKey), f['Q']);
         });
       });
       (fixtures['invalid']['fromPrivateKey'] as List).forEach((f) {
         test('throws ' + f['exception'], () {
-          final d = HEX.decode(f['d']);
+          Uint8List d = HEX.decode(f['d']) as Uint8List;
           try {
             expect(ECPair.fromPrivateKey(d), isArgumentError);
           } catch (err) {
@@ -48,9 +51,9 @@ main() {
     group('fromPublicKey', () {
       (fixtures['invalid']['fromPublicKey'] as List).forEach((f) {
         test('throws ' + f['exception'], () {
-          final Q = HEX.decode(f['Q']);
+          Uint8List q = HEX.decode(f['Q']) as Uint8List;
           try {
-            expect(ECPair.fromPublicKey(Q), isArgumentError);
+            expect(ECPair.fromPublicKey(q), isArgumentError);
           } catch (err) {
             expect((err as ArgumentError).message, f['exception']);
           }
@@ -62,7 +65,7 @@ main() {
         test('imports ${f['WIF']}', () {
           final keyPair = ECPair.fromWIF(f['WIF']);
           var network = _getNetwork(f);
-          expect(HEX.encode(keyPair.privateKey), f['d']);
+          expect(HEX.encode(keyPair.privateKey as Uint8List), f['d']);
           expect(keyPair.compressed, f['compressed']);
           expect(keyPair.network, network);
         });
