@@ -30,6 +30,7 @@ Uint8List VALUE_UINT64_MAX =
 
 final BLANK_OUTPUT =
     Output(script: EMPTY_SCRIPT, valueBuffer: VALUE_UINT64_MAX);
+const MIN_VERSION_NO_TOKENS = 3;
 
 class Transaction {
   int version = 1;
@@ -57,7 +58,7 @@ class Transaction {
 
   bool hasWitnesses() {
     var witness = ins.firstWhereOrNull(
-      (input) => input.witness?.length != 0,
+      (input) => input.witness!=null&&(input.witness??[]).isNotEmpty,
     );
     return witness != null;
   }
@@ -250,8 +251,8 @@ class Transaction {
     return bcrypto.hash256(buffer);
   }
 
-  num _byteLength(_ALLOW_WITNESS) {
-    bool hasWitness = _ALLOW_WITNESS && hasWitnesses();
+  num _byteLength(bool ALLOW_WITNESS) {
+    var hasWitness = ALLOW_WITNESS && hasWitnesses();
     return (hasWitness ? 10 : 8) +
         varuint.encodingLength(ins.length) +
         varuint.encodingLength(outs.length) +
@@ -276,17 +277,9 @@ class Transaction {
     return varuint.encodingLength(0);
   }
 
-  /*  int vectorSize(List<Uint8List> someVector) {
-
-    var length = someVector.length;
-    return varuint.encodingLength(length) +
-        someVector.fold(
-            0, (sum, witness) => sum + varSliceSize(witness));
-  }*/
-
   int weight() {
     int base = _byteLength(false) as int;
-    int total = _byteLength(true) as int;
+    int total = _byteLength(true) as int ;
     return base * 3 + total;
   }
 
@@ -339,42 +332,42 @@ class Transaction {
     var bytes = buffer.buffer.asByteData();
     var offset = initialOffset ?? 0;
 
-    writeSlice(slice) {
+    void  writeSlice(slice) {
       buffer!.setRange(offset, offset + slice.length as int, slice);
       offset += slice.length as int;
     }
 
-    writeUInt8(i) {
+    void  writeUInt8(i) {
       bytes.setUint8(offset, i);
       offset++;
     }
 
-    writeUInt32(i) {
+    void writeUInt32(i) {
       bytes.setUint32(offset, i, Endian.little);
       offset += 4;
     }
 
-    writeInt32(i) {
+    void writeInt32(i) {
       bytes.setInt32(offset, i, Endian.little);
       offset += 4;
     }
 
-    writeUInt64(i) {
+    void writeUInt64(i) {
       bytes.setUint64(offset, i, Endian.little);
       offset += 8;
     }
 
-    writeVarInt(i) {
+    void writeVarInt(i) {
       varuint.encode(i, buffer, offset);
       offset += varuint.encodingLength(i);
     }
 
-    writeVarSlice(slice) {
+   void writeVarSlice(slice) {
       writeVarInt(slice.length);
       writeSlice(slice);
     }
 
-    writeVector(vector) {
+   void writeVector(vector) {
       writeVarInt(vector.length);
       vector.forEach((buf) {
         writeVarSlice(buf);
@@ -411,7 +404,7 @@ class Transaction {
 
     if (_ALLOW_WITNESS && hasWitnesses()) {
       ins.forEach((txInt) {
-        writeVector(txInt.witness);
+        writeVector(txInt.witness??[]);
       });
     }
 
@@ -686,9 +679,7 @@ class Output {
       this.pubkeys,
       this.signatures,
       this.valueBuffer}) {
-    if (value == null) throw ArgumentError('Invalid output value');
-
-    if (!isShatoshi(value!))
+    if (value != null&&!isShatoshi(value!))
       throw ArgumentError('Invalid output value');
   }
 
@@ -750,24 +741,6 @@ bool isCoinbaseHash(Uint8List buffer) {
   }
   return true;
 }
-
-// bool _isP2PKHInput(script) {
-//   final chunks = bscript.decompile(script);
-//   return chunks != null &&
-//       chunks.length == 2 &&
-//       bscript.isCanonicalScriptSignature(chunks[0]) &&
-//       bscript.isCanonicalPubKey(chunks[1]);
-// }
-//
-// bool _isP2PKHOutput(script) {
-//   final buffer = bscript.compile(script);
-//   return buffer.length == 25 &&
-//       buffer[0] == OPS['OP_DUP'] &&
-//       buffer[1] == OPS['OP_HASH160'] &&
-//       buffer[2] == 0x14 &&
-//       buffer[23] == OPS['OP_EQUALVERIFY'] &&
-//       buffer[24] == OPS['OP_CHECKSIG'];
-// }
 
 int varSliceSize(Uint8List someScript) {
   final length = someScript.length;

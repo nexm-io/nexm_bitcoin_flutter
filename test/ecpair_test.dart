@@ -124,7 +124,7 @@ main() {
     group('.network', () {
       (fixtures['valid'] as List).forEach((f) {
         test('return ${f['network']} for ${f['WIF']}', () {
-          NETWORKS.NetworkType network = _getNetwork(f);
+          NETWORKS.NetworkType? network = _getNetwork(f);
           final keyPair = ECPair.fromWIF(f['WIF']);
           expect(keyPair.network, network);
         });
@@ -133,7 +133,7 @@ main() {
   });
 }
 
-NETWORKS.NetworkType _getNetwork(f) {
+NETWORKS.NetworkType? _getNetwork(f) {
   var network;
   if (f['network'] != null) {
     if (f['network'] == 'bitcoin') {
